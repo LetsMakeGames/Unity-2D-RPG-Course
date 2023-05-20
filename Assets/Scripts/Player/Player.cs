@@ -6,62 +6,131 @@ public class Player : MonoBehaviour
 {
     [SerializeField] private float xInput = 0.0f;
     [SerializeField] private float yInput = 0.0f;
-    [SerializeField] public float moveSpeed = 5.0f;
-    [SerializeField] public float maxVelocityX = 5.0f;
-    [SerializeField] public float jumpVelocity = 10.0f;
-
+    [SerializeField] private float moveSpeed = 5.0f;
+    [SerializeField] private float jumpForce = 10.0f;
     [SerializeField] private Vector2 velocity = Vector2.zero;
 
+    [Header("Dash Info")]
+    [SerializeField] private float dashSpeed = 0.0f;
+    [SerializeField] private float dashDuration = 0.0f;
+    [SerializeField] private float dashTimer = 0.0f;
+    [SerializeField] private float dashCooldown = 0.0f;
+    [SerializeField] private float dashCooldownTimer = 0.0f;
+
+    private bool isDashing = false;
+
+    [Header("Collision Info")]
+    [SerializeField] private float groundCheckDistance = 0.0f;
+    [SerializeField] private LayerMask whatIsGround;
+
     private bool isGrounded = false;
+    private bool isMoving = false;
+    private bool facingRight = true;
 
-    public Rigidbody2D rb;
+    private int facingDir = 1;
 
+    private Rigidbody2D rb;
+    private Animator anim;
+    
     // Start is called before the first frame update
     void Start()
     {
-
+        rb = GetComponent<Rigidbody2D>();
+        anim = GetComponentInChildren<Animator>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        CheckInput();
+        Movement();
+        Dash();
+        AnimatorControllers();
+        FlipController();
 
+        isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, whatIsGround);
+    }
+
+    private void CheckInput()
+    {
         // Inputs
         xInput = Input.GetAxisRaw("Horizontal");
         yInput = Input.GetAxisRaw("Vertical");
-        velocity = rb.velocity;
-
-
-        // Horizontal Movement
-        if (xInput != 0)
-        {
-            if (velocity.x < maxVelocityX && velocity.x > -maxVelocityX)
-            {
-                rb.AddForce(new Vector2(xInput * moveSpeed, rb.velocity.y));
-                Debug.Log("Adding H Force");
-            } else if (rb.velocity.x > maxVelocityX)
-            {
-                rb.velocity = new Vector2(5, rb.velocity.y);
-                Debug.Log("Over Max Velocity Right, set 5");
-            } else if (rb.velocity.x < -maxVelocityX)
-            {
-                rb.velocity = new Vector2(rb.velocity.x, -5);
-                Debug.Log("Over Max Velocity Left, set -5");
-            }
-            
-            Debug.Log("You're moving horizontally!");
-        }
-        else
-        {
-            rb.velocity = new Vector2(0, rb.velocity.y);
-            Debug.Log("You stopped moving...");
-        }
 
         // Vertical Movement
         if (Input.GetButtonDown("Jump"))
         {
-            rb.AddForce(new Vector2(rb.velocity.x, jumpVelocity));
-            Debug.Log("Jump!");
+            Jump();
         }
+    }
+
+    private void Movement()
+    {
+        if (dashTimer > 0)
+        {
+            rb.velocity = new Vector2(xInput * dashSpeed, 0);
+        }
+        else
+        {
+            rb.velocity = new Vector2(xInput * moveSpeed, rb.velocity.y);
+        }
+        
+        velocity = rb.velocity;
+    }
+
+    private void AnimatorControllers()
+    {
+        bool isMoving = rb.velocity.x != 0;
+        anim.SetBool("isMoving", isMoving);
+        anim.SetBool("isDashing", isDashing);
+        anim.SetFloat("yVelocity", rb.velocity.y);
+        anim.SetBool("isGrounded", isGrounded);
+    }
+
+    private void FlipController()
+    {
+        if (rb.velocity.x > 0 && !facingRight)
+        {
+            Flip();
+        }
+        else if (rb.velocity.x < 0 && facingRight)
+        {
+            Flip();
+        }
+    }
+
+    private void Jump()
+    {
+        if (isGrounded)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+        }
+
+    }
+
+    private void Dash()
+    {
+        dashTimer -= Time.deltaTime;
+        dashCooldownTimer -= Time.deltaTime;
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && dashCooldownTimer <= 0)
+        {
+            dashTimer = dashDuration;
+            dashCooldownTimer = dashCooldown;
+        }
+
+        isDashing = dashTimer > 0;
+    }
+
+    private void Flip()
+    {
+        facingDir = facingDir * -1;
+        facingRight = !facingRight;
+        transform.Rotate(0, 180, 0);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawLine(transform.position, new Vector3(transform.position.x, transform.position.y - groundCheckDistance));
     }
 }
