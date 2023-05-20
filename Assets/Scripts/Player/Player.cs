@@ -42,9 +42,9 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        Timers();
         CheckInput();
         Movement();
-        Dash();
         AnimatorControllers();
         FlipController();
 
@@ -62,6 +62,11 @@ public class Player : MonoBehaviour
         {
             Jump();
         }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            Dash();
+        }
     }
 
     private void Movement()
@@ -72,6 +77,7 @@ public class Player : MonoBehaviour
         }
         else
         {
+            isDashing = false;
             rb.velocity = new Vector2(xInput * moveSpeed, rb.velocity.y);
         }
         
@@ -110,16 +116,12 @@ public class Player : MonoBehaviour
 
     private void Dash()
     {
-        dashTimer -= Time.deltaTime;
-        dashCooldownTimer -= Time.deltaTime;
-
-        if (Input.GetKeyDown(KeyCode.LeftShift) && dashCooldownTimer <= 0)
+        if (dashCooldownTimer <= 0)
         {
+            isDashing = true;
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
         }
-
-        isDashing = dashTimer > 0;
     }
 
     private void Flip()
@@ -127,6 +129,12 @@ public class Player : MonoBehaviour
         facingDir = facingDir * -1;
         facingRight = !facingRight;
         transform.Rotate(0, 180, 0);
+    }
+
+    private void Timers()
+    {
+        dashTimer -= Time.deltaTime;
+        dashCooldownTimer -= Time.deltaTime;
     }
 
     private void OnDrawGizmos()
