@@ -267,6 +267,7 @@ GameObject:
   - component: {fileID: 404075252}
   - component: {fileID: 404075253}
   - component: {fileID: 404075254}
+  - component: {fileID: 404075255}
   m_Layer: 0
   m_Name: Animator
   m_TagString: Untagged
@@ -362,6 +363,18 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &404075255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 404075251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d27dcee967a504509a457796a3d172cf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -554,6 +567,8 @@ MonoBehaviour:
   moveSpeed: 10
   jumpForce: 12
   velocity: {x: 0, y: 0}
+  comboTimer: 0
+  comboTime: 0.8
   dashSpeed: 20
   dashDuration: 0.4
   dashTimer: 0

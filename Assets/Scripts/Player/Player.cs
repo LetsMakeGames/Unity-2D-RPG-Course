@@ -10,6 +10,12 @@ public class Player : MonoBehaviour
     [SerializeField] private float jumpForce = 10.0f;
     [SerializeField] private Vector2 velocity = Vector2.zero;
 
+    [Header("Attacking Info")]
+    [SerializeField] private float comboTimer = 0.0f;
+    [SerializeField] private float comboTime = 0.0f;
+    private bool isAttacking = false;
+    private int comboCounter = 0;
+
     [Header("Dash Info")]
     [SerializeField] private float dashSpeed = 0.0f;
     [SerializeField] private float dashDuration = 0.0f;
@@ -67,11 +73,20 @@ public class Player : MonoBehaviour
         {
             Dash();
         }
+
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            StartAttackEvent();
+        }
     }
 
     private void Movement()
     {
-        if (dashTimer > 0)
+        if (isAttacking)
+        {
+            rb.velocity = Vector2.zero;
+        }
+        else if (dashTimer > 0)
         {
             rb.velocity = new Vector2(xInput * dashSpeed, 0);
         }
@@ -86,11 +101,13 @@ public class Player : MonoBehaviour
 
     private void AnimatorControllers()
     {
-        bool isMoving = rb.velocity.x != 0;
+        isMoving = rb.velocity.x != 0;
         anim.SetBool("isMoving", isMoving);
         anim.SetBool("isDashing", isDashing);
         anim.SetFloat("yVelocity", rb.velocity.y);
         anim.SetBool("isGrounded", isGrounded);
+        anim.SetBool("isAttacking", isAttacking);
+        anim.SetInteger("comboCounter", comboCounter);
     }
 
     private void FlipController()
@@ -116,11 +133,38 @@ public class Player : MonoBehaviour
 
     private void Dash()
     {
-        if (dashCooldownTimer <= 0)
+        if (dashCooldownTimer <= 0 && !isAttacking && isMoving)
         {
             isDashing = true;
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
+        }
+    }
+
+    private void StartAttackEvent()
+    {
+        if (comboTimer < 0)
+        {
+            comboCounter = 0;
+        }
+
+        if (isDashing)
+        {
+            isDashing = false;
+        }
+
+        comboTimer = comboTime;
+        isAttacking = true;
+    }
+
+    public void AttackOver()
+    {
+        isAttacking = false;
+        comboCounter++;
+
+        if (comboCounter > 2)
+        {
+            comboCounter = 0;
         }
     }
 
@@ -135,6 +179,7 @@ public class Player : MonoBehaviour
     {
         dashTimer -= Time.deltaTime;
         dashCooldownTimer -= Time.deltaTime;
+        comboTimer -= Time.deltaTime;
     }
 
     private void OnDrawGizmos()
